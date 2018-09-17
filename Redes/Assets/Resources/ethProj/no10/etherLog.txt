@@ -1,0 +1,19 @@
+INFO [09-12|13:49:40.587] Maximum peer count                       ETH=100 LES=0 total=100
+INFO [09-12|13:49:40.588] Starting peer-to-peer node               instance=Geth/v1.8.12-stable-37685930/linux-amd64/go1.10
+INFO [09-12|13:49:40.588] Allocated cache and file handles         database=/tmp/pycore.36931/n10.conf/ethereum-private-chain/geth/chaindata cache=768 handles=512
+INFO [09-12|13:49:41.125] Initialised chain configuration          config="{ChainID: 143 Homestead: 0 DAO: <nil> DAOSupport: false EIP150: <nil> EIP155: 0 EIP158: 0 Byzantium: <nil> Constantinople: <nil> Engine: unknown}"
+INFO [09-12|13:49:41.125] Disk storage enabled for ethash caches   dir=/tmp/pycore.36931/n10.conf/ethereum-private-chain/geth/ethash count=3
+INFO [09-12|13:49:41.125] Disk storage enabled for ethash DAGs     dir=/root/.ethash                                                 count=2
+INFO [09-12|13:49:41.125] Initialising Ethereum protocol           versions="[63 62]" network=58343
+INFO [09-12|13:49:41.125] Loaded most recent local header          number=0 hash=fbb8b4…2baa59 td=131072
+INFO [09-12|13:49:41.125] Loaded most recent local full block      number=0 hash=fbb8b4…2baa59 td=131072
+INFO [09-12|13:49:41.125] Loaded most recent local fast block      number=0 hash=fbb8b4…2baa59 td=131072
+INFO [09-12|13:49:41.126] Regenerated local transaction journal    transactions=0 accounts=0
+INFO [09-12|13:49:41.126] Starting P2P networking 
+INFO [09-12|13:49:41.144] RLPx listener up                         self="enode://a3df92afaa6a116d8abd8280d7eca05215f1fd816a57e6433f3a747ad0ab5378c9fe5651a376627abfc74ea88ef941c191f5ad7637775f117383310715e94e3f@[::]:3000?discport=0"
+INFO [09-12|13:49:41.147] IPC endpoint opened                      url=/tmp/pycore.36931/n10.conf/ethereum-private-chain/geth.ipc
+INFO [09-12|13:49:41.148] HTTP endpoint opened                     url=http://10.0.1.12:8543                                      cors=* vhosts=localhost
+INFO [09-12|14:49:41.145] Regenerated local transaction journal    transactions=0 accounts=0
+INFO [09-12|15:49:41.144] Regenerated local transaction journal    transactions=0 accounts=0
+INFO [09-12|16:49:41.144] Regenerated local transaction journal    transactions=0 accounts=0
+INFO [09-12|17:49:41.145] Regenerated local transaction journal    transactions=0 accounts=0
