@@ -230,8 +230,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9e79a5ebd40472e4aa79f4e4b29d9420, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  minerNodeLogIndex: 1
   logStartIndex: 2
-  fileEndIndex: 3
+  fileEndIndex: 25
+  commitNewMiningWorkLines: []
+  sealedNewBlockLines: []
+  minedPotentialBlockLines: []
+  blockReachedCanonicalChainLines: []
   lines: []
   chainSegments: []
   blocks: []
