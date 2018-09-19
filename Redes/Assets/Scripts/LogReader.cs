@@ -13,19 +13,19 @@ public struct BlockInfo
 
     /*------Mining Node Log------*/
     public string timeOfCreationS; // Time of the block creation. Example Format: "13:57:02.807"
-    public float timeOfCreation; // Converted time of creation
+    public DateTime timeOfCreation; // Converted time of creation
     public float creationElapsedTime; // Creation elapsed time (I believe it's the creation duration)
 
     public string timeOfSealingS; // Time of the block sealing. Example Format: "13:57:02.807"
-    public float timeOfSealing; // Converted time of sealing
+    public DateTime timeOfSealing; // Converted time of sealing
 
     public string timeOfChainReachS; // Time the block reached the chain. Example Format: "13:57:02.807"
-    public float timeOfChainReach; // Converted time the block reached the chain
+    public DateTime timeOfChainReach; // Converted time the block reached the chain
     /*---------------------------*/
 
     /*------Other Nodes Log------*/
     public List<string> timeOfImportS; // The the block was imported. Example Format: "13:57:02.807"
-    public List<float> timeOfImport; // Converted time of import
+    public List<DateTime> timeOfImport; // Converted time of import
     public List<float> importElapsedTime; // Import elapsed time (I believe it's the import duration)
 
     public float meanImportDuration;
@@ -37,6 +37,7 @@ public class LogReader : MonoBehaviour {
     public int minerNodeLogIndex = 1;
     public int logStartIndex = 2;
     public int fileEndIndex = 25;
+    public int minValidBlockImportCount = 15;
 
     public List<string> commitNewMiningWorkLines = new List<string>();
     public List<string> sealedNewBlockLines = new List<string>();
@@ -112,7 +113,9 @@ public class LogReader : MonoBehaviour {
                 if (bit.StartsWith("[") && bit.EndsWith("]"))
                 {
                     aux = bit.Split('|')[1];
-                    block.timeOfCreationS = aux.Replace("]", "");
+                    aux = aux.Replace("]", "");
+                    block.timeOfCreationS = aux;
+                    block.timeOfCreation = StringToDateTime(aux);
                 }
                 else if (bit.StartsWith("number="))
                 {
@@ -141,7 +144,8 @@ public class LogReader : MonoBehaviour {
         {
             lineBits = sealedNewBlockLines[i].Split(new char[] { ' ' }, System.StringSplitOptions.RemoveEmptyEntries).ToList();
             int __blockNumber = 0;
-            string __timeOfSealing = "";
+            string __timeOfSealingS = "";
+            DateTime __timeOfSealing = new DateTime();
             string __hash = "";
 
             foreach (string bit in lineBits)
@@ -149,7 +153,10 @@ public class LogReader : MonoBehaviour {
                 if (bit.StartsWith("[") && bit.EndsWith("]"))
                 {
                     aux = bit.Split('|')[1];
-                    __timeOfSealing = aux.Replace("]", "");
+                    aux = aux.Replace("]", "");
+                    __timeOfSealingS = aux;
+                    __timeOfSealing = StringToDateTime(aux);
+                    
                 }
                 else if (bit.StartsWith("number="))
                 {
@@ -165,7 +172,8 @@ public class LogReader : MonoBehaviour {
                 if (blocks[j].number == __blockNumber)
                 {
                     BlockInfo __block = blocks[j];
-                    __block.timeOfSealingS = __timeOfSealing;
+                    __block.timeOfSealingS = __timeOfSealingS;
+                    __block.timeOfSealing = __timeOfSealing;
                     __block.hash = __hash;
                     blocks[j] = __block;
                     break;
@@ -183,14 +191,17 @@ public class LogReader : MonoBehaviour {
         {
             lineBits = blockReachedCanonicalChainLines[i].Split(new char[] { ' ' }, System.StringSplitOptions.RemoveEmptyEntries).ToList();
             int __blockNumber = 0;
-            string __timeOfChainReach = "";
+            string __timeOfChainReachS = "";
+            DateTime __timeOfChainReach = new DateTime();
 
             foreach (string bit in lineBits)
             {
                 if (bit.StartsWith("[") && bit.EndsWith("]"))
                 {
                     aux = bit.Split('|')[1];
-                    __timeOfChainReach = aux.Replace("]", "");
+                    aux = aux.Replace("]", "");
+                    __timeOfChainReachS = aux;
+                    __timeOfChainReach = StringToDateTime(aux);
                 }
                 else if (bit.StartsWith("number="))
                 {
@@ -203,7 +214,8 @@ public class LogReader : MonoBehaviour {
                 if (blocks[j].number == __blockNumber)
                 {
                     BlockInfo __block = blocks[j];
-                    __block.timeOfChainReachS = __timeOfChainReach;
+                    __block.timeOfChainReachS = __timeOfChainReachS;
+                    __block.timeOfChainReach = StringToDateTime(__timeOfChainReachS);
                     blocks[j] = __block;
                     break;
                 }
@@ -291,8 +303,12 @@ public class LogReader : MonoBehaviour {
                 {
                     BlockInfo __block = blocks[j];
                     if (__block.timeOfImportS == null)
+                    {
                         __block.timeOfImportS = new List<string>();
+                        __block.timeOfImport = new List<DateTime>();
+                    }
                     __block.timeOfImportS.Add(__timeOfImport);
+                    __block.timeOfImport.Add(StringToDateTime(__timeOfImport));
                     if (__block.importElapsedTime == null)
                         __block.importElapsedTime = new List<float>();
                     __block.importElapsedTime.Add(__importElapsedTime);
@@ -309,8 +325,15 @@ public class LogReader : MonoBehaviour {
         for (int i = blocks.Count - 1; i >= 0; i--)
         {
             if (blocks[i].number == 0 || blocks[i].hash == null || blocks[i].timeOfCreationS == null
-                || blocks[i].timeOfSealingS == null /*|| blocks[i].timeOfChainReachS == null*/ || blocks[i].timeOfImportS == null)
+                || blocks[i].timeOfSealingS == null /*|| blocks[i].timeOfChainReachS == null*/ || blocks[i].timeOfImportS == null
+                || blocks[i].timeOfImportS.Count < minValidBlockImportCount)
                 blocks.RemoveAt(i);
         }
+    }
+
+    private DateTime StringToDateTime(string text)
+    {
+        return new DateTime(2018, 9, 12, int.Parse(text.Split(':')[0]), int.Parse(text.Split(':')[1]), 
+            int.Parse((text.Split(':')[2]).Split('.')[0]), int.Parse((text.Split(':')[2]).Split('.')[1]));
     }
 }
