@@ -24,16 +24,24 @@ public struct BlockInfo
     /*---------------------------*/
 
     /*------Other Nodes Log------*/
-    public List<string> timeOfImportS; // The the block was imported. Example Format: "13:57:02.807"
+    public List<string> timeOfImportS; // The time the block was imported. Example Format: "13:57:02.807"
     public List<DateTime> timeOfImport; // Converted time of import
-    public List<float> importElapsedTime; // Import elapsed time (I believe it's the import duration)
+    public List<float> importElapsedTime; // Import elapsed time (I believe it's the import process duration, after the node was received)
+    public List<float> importDuration; // Time between Sealing and Importing for each node. Value im milisseconds
+    /*---------------------------*/
 
-    public float meanImportDuration;
+    /*----------Results----------*/
+    public float chainReachDuration; // Time between Sealing and the Chain Reach. Value im milisseconds
+    public float minImportDuration; // Min value for the importDuration. Value im milisseconds
+    public float maxImportDuration; // Max value for the importDuration. Value im milisseconds
+    public float meanImportDuration; // Mean value for the importDuration. Value im milisseconds
     /*---------------------------*/
 }
 
 public class LogReader : MonoBehaviour {
 
+    public bool clearListsAfterProcess = true;
+    public string logFolder = "ethProj";
     public int minerNodeLogIndex = 1;
     public int logStartIndex = 2;
     public int fileEndIndex = 25;
@@ -58,15 +66,32 @@ public class LogReader : MonoBehaviour {
         ParseFiles();
 
         ClearIncompleteBlocks();
+        if (clearListsAfterProcess)
+            clearLists();
         /*for (int j = 0; j < blocks.Count; j++)
         {
             Debug.Log(blocks[j].parts);
         }*/
     }
 
+    private void clearLists()
+    {
+        commitNewMiningWorkLines.Clear();
+        sealedNewBlockLines.Clear();
+        minedPotentialBlockLines.Clear();
+        blockReachedCanonicalChainLines.Clear();
+        lines.Clear();
+        chainSegments.Clear();
+        
+        for (int i = 0; i < blocks.Count; i++)
+        {
+            blocks[i].timeOfImportS.Clear();
+        }
+    }
+
     private void ParseMinerLog()
     {
-        TextAsset bindata = Resources.Load("ethProj/no" + minerNodeLogIndex.ToString() + "/etherLog") as TextAsset;
+        TextAsset bindata = Resources.Load(logFolder + "/no" + minerNodeLogIndex.ToString() + "/etherLog") as TextAsset;
         lines = bindata.text.Split(new char[] { '\n', '\r' }, System.StringSplitOptions.RemoveEmptyEntries).ToList();
         chainSegments = new List<string>(lines);
 
@@ -193,6 +218,7 @@ public class LogReader : MonoBehaviour {
             int __blockNumber = 0;
             string __timeOfChainReachS = "";
             DateTime __timeOfChainReach = new DateTime();
+            TimeSpan __ts = new TimeSpan();
 
             foreach (string bit in lineBits)
             {
@@ -216,6 +242,11 @@ public class LogReader : MonoBehaviour {
                     BlockInfo __block = blocks[j];
                     __block.timeOfChainReachS = __timeOfChainReachS;
                     __block.timeOfChainReach = StringToDateTime(__timeOfChainReachS);
+                    if (__timeOfChainReachS != "")
+                    {
+                        __ts = __timeOfChainReach - __block.timeOfCreation;
+                        __block.chainReachDuration = (__ts.Seconds * 1000) + __ts.Milliseconds;
+                    }
                     blocks[j] = __block;
                     break;
                 }
@@ -302,13 +333,20 @@ public class LogReader : MonoBehaviour {
                 if (blocks[j].number == __blockNumber)
                 {
                     BlockInfo __block = blocks[j];
+                    DateTime __dt = new DateTime();
+                    TimeSpan __ts = new TimeSpan();
                     if (__block.timeOfImportS == null)
                     {
                         __block.timeOfImportS = new List<string>();
                         __block.timeOfImport = new List<DateTime>();
+                        __block.importDuration = new List<float>();
                     }
                     __block.timeOfImportS.Add(__timeOfImport);
-                    __block.timeOfImport.Add(StringToDateTime(__timeOfImport));
+                    __dt = StringToDateTime(__timeOfImport);
+                    __block.timeOfImport.Add(__dt);
+                    __ts = (__dt - __block.timeOfCreation);
+                    __block.importDuration.Add((__ts.Seconds * 1000) + __ts.Milliseconds);
+
                     if (__block.importElapsedTime == null)
                         __block.importElapsedTime = new List<float>();
                     __block.importElapsedTime.Add(__importElapsedTime);
