@@ -56,6 +56,14 @@ public class LogReader : MonoBehaviour {
     public List<string> chainSegments;
     public List<BlockInfo> blocks;
 
+    public float minImportTime;
+    public float maxImportTime;
+    public float meanImportTime;
+    public float minChainReachTime;
+    public float maxChainReachTime;
+    public float meanChainReachTime;
+
+
     void Start()
     {
         lines = new List<string>();
@@ -66,15 +74,65 @@ public class LogReader : MonoBehaviour {
         ParseFiles();
 
         ClearIncompleteBlocks();
+        ProcessBlocks();
+
         if (clearListsAfterProcess)
-            clearLists();
+            ClearLists();
         /*for (int j = 0; j < blocks.Count; j++)
         {
             Debug.Log(blocks[j].parts);
         }*/
     }
 
-    private void clearLists()
+    private void ProcessBlocks()
+    {
+        BlockInfo __block;
+        float __overallImportCounter = 0f;
+        float __overallBlockImportInstancesCounter = 0f;
+        float __blockImportCounter;
+
+        minImportTime = 100000000f;
+        maxImportTime = 0f;
+        meanImportTime = 0f;
+        minChainReachTime = 1000000f;
+        maxChainReachTime = 0f;
+        meanChainReachTime = 0f;
+
+        for (int i = 0; i < blocks.Count; i++)
+        {
+            __block = blocks[i];
+            __blockImportCounter = 0f;
+            __block.minImportDuration = 1000000f;
+            __block.maxImportDuration = 0f;
+
+            for (int j = 0; j < __block.importDuration.Count; j++)
+            {
+                __blockImportCounter += __block.importDuration[j];
+                // Per Block
+                if (__block.importDuration[j] > __block.maxImportDuration)
+                    __block.maxImportDuration = __block.importDuration[j];
+                if (__block.importDuration[j] < __block.minImportDuration)
+                    __block.minImportDuration = __block.importDuration[j];
+                // Overall Import
+                if (__block.importDuration[j] > maxImportTime)
+                    maxImportTime = __block.importDuration[j];
+                if (__block.importDuration[j] < minImportTime)
+                    minImportTime = __block.importDuration[j];
+                
+            }
+            __block.meanImportDuration = __blockImportCounter / __block.importDuration.Count;
+            __overallImportCounter += __blockImportCounter;
+            __overallBlockImportInstancesCounter += __block.importDuration.Count;
+            // Overall Chain Reach
+            if (__block.chainReachDuration > maxChainReachTime)
+                maxChainReachTime = __block.chainReachDuration;
+            if (__block.chainReachDuration < minChainReachTime)
+                minChainReachTime = __block.chainReachDuration;
+            blocks[i] = __block;
+        }
+    }
+
+    private void ClearLists()
     {
         commitNewMiningWorkLines.Clear();
         sealedNewBlockLines.Clear();

@@ -230,13 +230,32 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9e79a5ebd40472e4aa79f4e4b29d9420, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  clearListsAfterProcess: 1
+  logFolder: ethProj
   minerNodeLogIndex: 1
   logStartIndex: 2
   fileEndIndex: 25
+  minValidBlockImportCount: 15
   commitNewMiningWorkLines: []
   sealedNewBlockLines: []
   minedPotentialBlockLines: []
   blockReachedCanonicalChainLines: []
   lines: []
   chainSegments: []
-  blocks: []
+  blocks:
+  - number: 0
+    parts: 0
+    hash: 
+    timeOfCreationS: 
+    creationElapsedTime: 0
+    timeOfSealingS: 
+    timeOfChainReachS: 
+    timeOfImportS: []
+    importElapsedTime: []
+    importDuration: []
+    chainReachDuration: 0
+    minImportDuration: 0
+    maxImportDuration: 0
+    meanImportDuration: 0
+  minImportTime: 0
+  maxImportTime: 0
