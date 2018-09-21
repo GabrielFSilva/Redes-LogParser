@@ -40,22 +40,16 @@ public struct BlockInfo
 
 public class LogReader : MonoBehaviour {
 
+    [Header("Control")]
     public bool clearListsAfterProcess = true;
     public string logFolder = "ethProj";
     public int minerNodeLogIndex = 1;
-    public int logStartIndex = 2;
-    public int fileEndIndex = 25;
+    public int logFileStartIndex = 2;
+    public int logFileEndIndex = 25;
     public int minValidBlockImportCount = 15;
 
-    public List<string> commitNewMiningWorkLines = new List<string>();
-    public List<string> sealedNewBlockLines = new List<string>();
-    public List<string> minedPotentialBlockLines = new List<string>();
-    public List<string> blockReachedCanonicalChainLines = new List<string>();
-
-    public List<string> lines;
-    public List<string> chainSegments;
-    public List<BlockInfo> blocks;
-
+    [Header("Results")]
+    public float importCount;
     public float minImportTime;
     public float maxImportTime;
     public float meanImportTime;
@@ -63,25 +57,28 @@ public class LogReader : MonoBehaviour {
     public float maxChainReachTime;
     public float meanChainReachTime;
 
+    //Control lists
+    private List<string> commitNewMiningWorkLines = new List<string>();
+    private List<string> sealedNewBlockLines = new List<string>();
+    private List<string> minedPotentialBlockLines = new List<string>();
+    private List<string> blockReachedCanonicalChainLines = new List<string>();
+    private List<string> lines = new List<string>();
+    private List<string> chainSegments = new List<string>();
+
+    [Header("Data")]
+    public List<BlockInfo> blocks = new List<BlockInfo>();
 
     void Start()
     {
-        lines = new List<string>();
-        blocks = new List<BlockInfo>();
-
         ParseMinerLog();
         CreateBlocks();
         ParseFiles();
 
         ClearIncompleteBlocks();
         ProcessBlocks();
-
+        
         if (clearListsAfterProcess)
             ClearLists();
-        /*for (int j = 0; j < blocks.Count; j++)
-        {
-            Debug.Log(blocks[j].parts);
-        }*/
     }
 
     private void ProcessBlocks()
@@ -89,6 +86,7 @@ public class LogReader : MonoBehaviour {
         BlockInfo __block;
         float __overallImportCounter = 0f;
         float __overallBlockImportInstancesCounter = 0f;
+        float __overallChainReachCounter = 0f;
         float __blockImportCounter;
 
         minImportTime = 100000000f;
@@ -123,13 +121,18 @@ public class LogReader : MonoBehaviour {
             __block.meanImportDuration = __blockImportCounter / __block.importDuration.Count;
             __overallImportCounter += __blockImportCounter;
             __overallBlockImportInstancesCounter += __block.importDuration.Count;
-            // Overall Chain Reach
+            __overallChainReachCounter += __block.chainReachDuration;
+
+            // Overall Chain Reach Min-Max
             if (__block.chainReachDuration > maxChainReachTime)
                 maxChainReachTime = __block.chainReachDuration;
             if (__block.chainReachDuration < minChainReachTime)
                 minChainReachTime = __block.chainReachDuration;
             blocks[i] = __block;
         }
+        importCount = __overallImportCounter;
+        meanImportTime =  __overallImportCounter / __overallBlockImportInstancesCounter;
+        meanChainReachTime = __overallChainReachCounter / blocks.Count;
     }
 
     private void ClearLists()
@@ -154,6 +157,7 @@ public class LogReader : MonoBehaviour {
         chainSegments = new List<string>(lines);
 
         for (int i = 0; i < chainSegments.Count; i++)
+        //for (int i = 0; i < 1000; i++)
         {
             if (chainSegments[i].Contains("Commit new mining work"))
             {
@@ -314,8 +318,9 @@ public class LogReader : MonoBehaviour {
 
     private void ParseFiles()
     {
-        for (int i = logStartIndex; i <= fileEndIndex; i++)
-            ParseFile(i);
+        for (int i = logFileStartIndex; i <= logFileEndIndex; i++)
+            if (i != minerNodeLogIndex)
+                ParseFile(i);
     }
 
     private void ParseFile(int fileIndex)
@@ -421,7 +426,7 @@ public class LogReader : MonoBehaviour {
         for (int i = blocks.Count - 1; i >= 0; i--)
         {
             if (blocks[i].number == 0 || blocks[i].hash == null || blocks[i].timeOfCreationS == null
-                || blocks[i].timeOfSealingS == null /*|| blocks[i].timeOfChainReachS == null*/ || blocks[i].timeOfImportS == null
+                || blocks[i].timeOfSealingS == null || blocks[i].timeOfChainReachS == null || blocks[i].timeOfImportS == null
                 || blocks[i].timeOfImportS.Count < minValidBlockImportCount)
                 blocks.RemoveAt(i);
         }
