@@ -35,6 +35,7 @@ public struct BlockInfo
     public float minImportDuration; // Min value for the importDuration. Value im milisseconds
     public float maxImportDuration; // Max value for the importDuration. Value im milisseconds
     public float meanImportDuration; // Mean value for the importDuration. Value im milisseconds
+
     /*---------------------------*/
 }
 
@@ -64,12 +65,18 @@ public class LogReader : MonoBehaviour {
     private List<string> blockReachedCanonicalChainLines = new List<string>();
     private List<string> lines = new List<string>();
     private List<string> chainSegments = new List<string>();
+    private List<float> allImportTimes = new List<float>();
 
     [Header("Data")]
+    public List<int> blocksPerImportCount = new List<int>();
+    public List<float> averageTimePerBlockRange = new List<float>();
     public List<BlockInfo> blocks = new List<BlockInfo>();
 
     void Start()
     {
+        for (int i = 0; i < 25; i++)
+            blocksPerImportCount.Add(0);
+
         ParseMinerLog();
         CreateBlocks();
         ParseFiles();
@@ -114,7 +121,7 @@ public class LogReader : MonoBehaviour {
                 // Overall Import
                 if (__block.importDuration[j] > maxImportTime)
                     maxImportTime = __block.importDuration[j];
-                if (__block.importDuration[j] < minImportTime)
+                if (__block.importDuration[j] < minImportTime && __block.importDuration[j] >= 10f)
                     minImportTime = __block.importDuration[j];
                 
             }
@@ -129,10 +136,32 @@ public class LogReader : MonoBehaviour {
             if (__block.chainReachDuration < minChainReachTime)
                 minChainReachTime = __block.chainReachDuration;
             blocks[i] = __block;
+            blocksPerImportCount[__block.importDuration.Count]++;
         }
         importCount = __overallImportCounter;
         meanImportTime =  __overallImportCounter / __overallBlockImportInstancesCounter;
         meanChainReachTime = __overallChainReachCounter / blocks.Count;
+
+
+        // Average time ber block range
+        for(int i = 0; i < blocks.Count; i++)
+        {
+            int __counter = 0;
+            averageTimePerBlockRange.Add(0);
+            for (int j = i; j < i + 250; j++)
+            {
+                if (j == blocks.Count)
+                    break;
+                __counter++;
+                float __sum = 0;
+                for (int k = 0; k < blocks[j].importDuration.Count; k++)
+                    __sum += blocks[j].importDuration[k];
+                averageTimePerBlockRange[averageTimePerBlockRange.Count - 1] += __sum / blocks[j].importDuration.Count;
+            }
+            averageTimePerBlockRange[averageTimePerBlockRange.Count - 1] /= __counter;
+            i += 250;
+        }
+        
     }
 
     private void ClearLists()
